@@ -9,6 +9,8 @@ import axios from 'axios'
 
 export default function Messenger() {
     const [conversations, setConversations] = useState([])
+    const [currentChat, setCurrentChat] = useState(null)
+    const [messages, setMessages] = useState([])
     const {user} = useContext(AuthContext)
 
     useEffect(() => {
@@ -22,6 +24,18 @@ export default function Messenger() {
         };
         getConversations()
     }, [user._id])
+
+    useEffect(() => {
+        const getMessages = async () => {
+          try {
+            const res = await axios.get("/messages/" + currentChat?._id);
+            setMessages(res.data);
+          } catch (err) {
+            console.log(err);
+          }
+        };
+        getMessages();
+      }, [currentChat]);
     return (
         <>
         <Topbar />
@@ -31,7 +45,9 @@ export default function Messenger() {
                     <input placeholder="Search for friends" className="chatMenuInput"/>
                     {
                         conversations.map((c) => (
-                            <Conversation conversation={c} currentUser= {user} />
+                            <div onClick={()=>setCurrentChat(c)} >
+                                <Conversation conversation={c} currentUser= {user} />
+                            </div>
                         )
                         )
                     }
@@ -39,24 +55,21 @@ export default function Messenger() {
             </div>
             <div className="chatBox">
                 <div className="chatBoxWrapper">
+                    {
+                        currentChat ? ( 
+                   <>
                     <div className="chatBoxTop">
-                    <Message />
-                    <Message own= {true} />
-                    <Message />
-                    <Message />
-                    <Message own= {true} />
-                    <Message />
-                    <Message />
-                    <Message own= {true} />
-                    <Message />
-                    <Message />
-                    <Message own= {true} />
-                    <Message />
+                    {
+                        messages.map((m) => (
+                            <Message message={m} own={m.sender === user._id} />
+                        ))
+                    }
                     </div>
                     <div className="chatBoxBottom">
                     <textarea className="chatMessageInput" placeholder="write something..."></textarea>
                     <button className="chatSubmitButton">Send</button>
-                </div>
+                </div> </> ) : ( <span className="noConversationText">Open a conversation to start a chat.</span>) 
+}
                 </div>
             </div>
             <div className="chatOnline">
