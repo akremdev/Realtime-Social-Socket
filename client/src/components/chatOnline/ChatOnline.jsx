@@ -1,38 +1,50 @@
+import axios from 'axios'
+import { useEffect, useState } from 'react'
 import './chatOnline.css'
 
-export default function ChatOnline() {
+export default function ChatOnline({onlineUsers, currentId, setCurrentChat}) {
+    const [friends, setFriends] = useState([])
+    const [onlineFriends, setOnlineFriends] = useState([])
+    const PF = process.env.REACT_APP_PUBLIC_FOLDER;
+
+    useEffect(() => {
+        const getFriends = async () => {
+            const res  = await axios.get("/users/friends/" + currentId)
+            setFriends(res.data)
+        }
+        getFriends()
+    }, [currentId])
+
+    useEffect(() => {
+        setOnlineFriends(friends.filter((f) => onlineUsers.includes(f._id)))
+    }, [friends, onlineUsers])
+    
+    const handleClick = async (user) => {
+        try {
+            const res = await axios.get(`/conversations/find/${currentId}/${user._id}`)
+            setCurrentChat(res.data)
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
     return (
         <div className="chatOnline">
-            <div className="chatOnlineFriend">
-                <div className="chatOnlineImgContainer">
-                    <img 
-                    className="chatOnlineImg"
-                    src="https://media-exp1.licdn.com/dms/image/C5603AQEln4kyQcjrtA/profile-displayphoto-shrink_200_200/0/1597177296578?e=1623888000&v=beta&t=YrmMLVHn9KbiJ1dwZXlbQzB3HACrWX70RRzS9eOBdI4" alt=""
-                    />
-                    <div className="chatOnlineBadge"></div>
-                </div>
-                <span className="chatOnlineName">Akrem Gharbi</span>
-            </div>
-            <div className="chatOnlineFriend">
-                <div className="chatOnlineImgContainer">
-                    <img 
-                    className="chatOnlineImg"
-                    src="https://media-exp1.licdn.com/dms/image/C5603AQEln4kyQcjrtA/profile-displayphoto-shrink_200_200/0/1597177296578?e=1623888000&v=beta&t=YrmMLVHn9KbiJ1dwZXlbQzB3HACrWX70RRzS9eOBdI4" alt=""
-                    />
-                    <div className="chatOnlineBadge"></div>
-                </div>
-                <span className="chatOnlineName">Akrem Gharbi</span>
-            </div>
-            <div className="chatOnlineFriend">
-                <div className="chatOnlineImgContainer">
-                    <img 
-                    className="chatOnlineImg"
-                    src="https://media-exp1.licdn.com/dms/image/C5603AQEln4kyQcjrtA/profile-displayphoto-shrink_200_200/0/1597177296578?e=1623888000&v=beta&t=YrmMLVHn9KbiJ1dwZXlbQzB3HACrWX70RRzS9eOBdI4" alt=""
-                    />
-                    <div className="chatOnlineBadge"></div>
-                </div>
-                <span className="chatOnlineName">Akrem Gharbi</span>
-            </div>
+            {
+                onlineFriends.map((o) => (
+                    <div className="chatOnlineFriend" onClick={() => handleClick(o)}>
+                        <div className="chatOnlineImgContainer">
+                            <img 
+                            className="chatOnlineImg"
+                            src={o?.profilePicture ? PF + o.profilePicture : PF + "person/noAvatar.png"} alt=""
+                            />
+                            <div className="chatOnlineBadge"></div>
+                        </div>
+                        <span className="chatOnlineName">{o?.username}</span>
+                    </div> 
+                ))
+            }
+            
         </div>
     )
 }
